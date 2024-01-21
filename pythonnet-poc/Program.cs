@@ -24,13 +24,16 @@ class Program
     //"The main thread will hold the GIL after initialization until you explicitly release it by calling PythonEngine.BeginAllowThreads() from the main thread (not from your background thread). This is how python threading works, it's not specific to pythonnet."
     var threadState = PythonEngine.BeginAllowThreads();
 
+    //how to use this?
+    //PythonEngine.Compile
+
     using(var _ = Py.GIL())
     {
       //install pip first if not already installed:
       //sudo apt install python3-pip
       //then install numpy
       //pip install numpy
-      dynamic np = Py.Import("numpy");
+      dynamic np = Py.Import("numpy"); //can use globally?
       Console.WriteLine(np.cos(np.pi * 2));
 
       dynamic sin = np.sin;
@@ -55,6 +58,7 @@ class Program
       // create a Python scope
       using (PyModule scope = Py.CreateScope())
       {
+        scope.Import("numpy", "np");
         // convert the Person object to a PyObject
         PyObject pyPerson = person.ToPython();
 
@@ -62,7 +66,7 @@ class Program
         scope.Set("person", pyPerson);
 
         // the person object may now be used in Python
-        string code = "fullName = person.FirstName + ' ' + person.LastName";
+        string code = "fullName = person.FirstName + ' ' + person.LastName + ' ' + str(np.sin(5))";
         scope.Exec(code);
 
         Console.WriteLine(scope.Get("fullName"));
