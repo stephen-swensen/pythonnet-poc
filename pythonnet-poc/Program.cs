@@ -9,6 +9,7 @@ class Program
  * According to https://opensource.com/article/17/4/grok-gil
  * "IronPython provide single-process parallelism, but they are far from full CPython compatibility (e.g. no numpy)"
  *
+ * Install python in dotnet base container: https://stackoverflow.com/questions/68607222/how-to-run-a-python-script-inside-a-net-core-application-in-a-docker-container
  */
   static void Main(string[] args)
   {
@@ -16,6 +17,7 @@ class Program
     //find libpython3.x.so on linux:
     //sudo find / -name libpython3.10.so
     var libpythonPath = "/usr/lib/python3.10/config-3.10-x86_64-linux-gnu/libpython3.10.so";
+    //alternatively set PYTHONNET_PYDLL env var
     Runtime.PythonDLL = libpythonPath;
     PythonEngine.Initialize(); //initialize once from main thread
     //https://github.com/pythonnet/pythonnet/issues/109#issuecomment-184143936
