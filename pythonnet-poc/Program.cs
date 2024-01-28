@@ -22,34 +22,27 @@ class Program
     PythonEngine.Initialize(); //initialize once from main thread
     //https://github.com/pythonnet/pythonnet/issues/109#issuecomment-184143936
     //"The main thread will hold the GIL after initialization until you explicitly release it by calling PythonEngine.BeginAllowThreads() from the main thread (not from your background thread). This is how python threading works, it's not specific to pythonnet."
-    var threadState = PythonEngine.BeginAllowThreads();
+    PythonEngine.BeginAllowThreads();
 
-    //how to use this?
-    //PythonEngine.Compile
 
-    using(var _ = Py.GIL())
+    string code = @"fullName === person.FirstName + ' ' + person.LastName + ' ' + str(np.sin(5))
+  fullName = person.FirstName + ' ' ++ person.LastName + ' ' + str(np.sin(5))";
+    PyObject compiledCode;
+    using(var _ = Py.GIL()) //yes, the GIL is needed here
     {
-      //install pip first if not already installed:
-      //sudo apt install python3-pip
-      //then install numpy
-      //pip install numpy
-      dynamic np = Py.Import("numpy"); //can use globally?
-      Console.WriteLine(np.cos(np.pi * 2));
+      try
+      {
+        compiledCode = PythonEngine.Compile(code);
 
-      dynamic sin = np.sin;
-      Console.WriteLine(sin(5));
-
-      double c = (double)(np.cos(5) + sin(5));
-      Console.WriteLine(c);
-
-      dynamic a = np.array(new List<float> { 1, 2, 3 });
-      Console.WriteLine(a.dtype);
-
-      dynamic b = np.array(new List<float> { 6, 5, 4 }, dtype: np.int32);
-      Console.WriteLine(b.dtype);
-
-      Console.WriteLine(a * b);
+      }
+      catch (Exception e)
+      {
+        Console.WriteLine(e.Message.Replace("(, line", "(line"));
+        return;
+      }
     }
+
+    Console.WriteLine("made it");
 
     using(var _ = Py.GIL())
     {
@@ -65,9 +58,7 @@ class Program
         // create a Python variable "person"
         scope.Set("person", pyPerson);
 
-        // the person object may now be used in Python
-        string code = "fullName = person.FirstName + ' ' + person.LastName + ' ' + str(np.sin(5))";
-        scope.Exec(code);
+        scope.Execute(compiledCode);
 
         Console.WriteLine(scope.Get("fullName"));
       }
